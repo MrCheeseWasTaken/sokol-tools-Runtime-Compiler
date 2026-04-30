@@ -4,7 +4,7 @@ This is an attempt to create a runtime compiler for sokol. I do don't recommend 
 
 changes made to sokol-shdc can be viewed here [ShaderCompiler_Changes](ShaderCompiler_Changes.md)
 
-You can see an example at [example.cpp](src/example/example.cpp)
+You can see an example at [example.cpp](src/compiler_example/example.cpp)
 
 ![image](docs/images/compile_render.jpg)
 
