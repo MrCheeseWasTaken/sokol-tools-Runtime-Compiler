@@ -1,3 +1,9 @@
+# About this fork
+
+This is an attempt to create a runtime compiler for sokol. I do don't recommend using it as production code.
+
+You can see an example at [example.cpp](src/example/example.cpp)
+
 # sokol-tools
 
 [![Build](https://github.com/floooh/sokol-tools/actions/workflows/build.yml/badge.svg)](https://github.com/floooh/sokol-tools/actions/workflows/build.yml)
