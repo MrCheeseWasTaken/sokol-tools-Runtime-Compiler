@@ -1,4 +1,4 @@
-#Changes made
+# Changes made
 
 - added sokol library as gitmodule, [ext/sokol](ext/sokol)
 - added [ext/sokol_impl](ext/sokol_impl)
