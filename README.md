@@ -1,8 +1,8 @@
 # About this fork
 
-This is an attempt to create a runtime compiler for sokol. I do don't recommend using it as production code.
+This is an attempt to create a runtime compiler for sokol. I don't recommend using it as production code.
 
-changes made to sokol-shdc can be viewed here [ShaderCompiler_Changes](ShaderCompiler_Changes.md)
+changes made to sokol-shdc as well as other stuff can be viewed here [ShaderCompiler_Changes](ShaderCompiler_Changes.md)
 
 You can see an example at [example.cpp](src/compiler_example/example.cpp)
 
