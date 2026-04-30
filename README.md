@@ -6,6 +6,8 @@ changes made to sokol-shdc can be viewed here [ShaderCompiler_Changes](ShaderCom
 
 You can see an example at [example.cpp](src/example/example.cpp)
 
+![image](docs/images/compile_render.jpg)
+
 # sokol-tools
 
 [![Build](https://github.com/floooh/sokol-tools/actions/workflows/build.yml/badge.svg)](https://github.com/floooh/sokol-tools/actions/workflows/build.yml)
