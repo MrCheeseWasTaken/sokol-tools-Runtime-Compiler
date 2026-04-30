@@ -74,7 +74,7 @@ static ErrMsg validate_linking(const Input& inp, const Program& prog, const Prog
     return ErrMsg();
 }
 
-Reflection Reflection::build(const Args& args, const Input& inp, const std::array<Spirvcross,Slang::Num>& spirvcross_array) {
+Reflection Reflection::build(const Input& inp, const Spirvcross& spirvcross) {
     Reflection res;
     ErrMsg err;
 
@@ -84,8 +84,6 @@ Reflection Reflection::build(const Args& args, const Input& inp, const std::arra
     std::vector<Bindings> prog_bindings;
     for (const auto& item: inp.programs) {
         const Program& prog = item.second;
-        const Slang::Enum slang = Slang::first_valid(args.slang);
-        const Spirvcross& spirvcross = spirvcross_array[slang];
         ProgramReflection prog_refl;
         prog_refl.name = prog.name;
 
@@ -147,6 +145,10 @@ Reflection Reflection::build(const Args& args, const Input& inp, const std::arra
         res.error = inp.error(0, err.msg);
     }
     return res;
+}
+
+Reflection Reflection::build(const Args& args, const Input& inp, const std::array<Spirvcross,Slang::Num>& spirvcross_array) {
+    return build(inp, spirvcross_array[shdc::Slang::first_valid(args.slang)]);
 }
 
 ImageType::Enum Reflection::spirtype_to_image_type(const SPIRType& type) {

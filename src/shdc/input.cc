@@ -640,6 +640,30 @@ static bool load_and_preprocess(const std::string& path, const std::vector<std::
     return true;
 }
 
+Input Input::just_parse(const std::string& shader_code)
+{
+    Input inp = {};
+    int line_index = 0;
+    std::vector<std::string> lines;
+    pystring::splitlines(shader_code, lines);
+
+    for (std::string &line : lines)
+    {
+        Line newLine = {};
+        newLine.line = line;
+        newLine.index = line_index;
+        inp.lines.push_back(newLine);
+        line_index++;
+    }
+
+    if (!parse(inp))
+    {
+        inp.out_error.error("Failed to parse shader code");
+    }
+
+    return inp;
+}
+
 /* load file and parse into an Input object,
    check valid and error fields in returned object
 */

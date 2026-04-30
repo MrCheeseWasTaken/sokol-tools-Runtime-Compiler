@@ -33,14 +33,14 @@ export function build(b: Builder): void {
         // /MP: multithreaded compilation
         // /MT: statically linked stdlib
         b.addCompileOptions(['/W4', '/MP', '/MT']);
-        b.addCompileOptions([ '/wd4715']);
+        b.addCompileOptions(['/wd4715']);
         b.addCompileOptions({ opts: ['/Os'], buildMode: 'release' });
         b.addCompileDefinitions({
             _CRT_SECURE_NO_WARNINGS: '1',
             _SCL_SECURE_NO_WARNINGS: '1',
         });
     } else {
-        b.addCompileOptions(['-Wall', '-Wextra', '-Wno-missing-field-initializers' ]);
+        b.addCompileOptions(['-Wall', '-Wextra', '-Wno-missing-field-initializers']);
         b.addCompileOptions({ opts: ['-Os'], buildMode: 'release' });
         if (b.isGcc()) {
             b.addCompileOptions(['-Wno-missing-braces', '-Wno-deprecated']);
@@ -52,9 +52,68 @@ export function build(b: Builder): void {
 
     // sokol-shdc executable
     b.addTarget('sokol-shdc', 'plain-exe', (t) => {
-        t.setDir('src/shdc');
-        t.addSources(sokol_shdc_sources);
+        t.setDir('src/shdc_exe');
+        t.addSources(["main.cc"]);
         t.addIncludeDirectories(['.']);
+        t.addDependencies(['fmt', 'getopt', 'pystring', 'glslang', 'SPIRV-Cross', 'tint', 'sokol_shdc']);
+        if (b.isLinux()) {
+            t.addLinkOptions(['-static']);
+        }
+        if (b.isGcc() || b.isClang()) {
+            t.addCompileOptions(['-Wno-unused-result', '-Wno-unused-parameter']);
+        }
+        if (b.isMsvc()) {
+            // unreferenced parameter
+            // declaration of 'x' hides previous local declaration
+            // conversion from 'x' to 'y' possible loss of data
+            t.addCompileOptions(['/wd4100', '/wd4456', '/wd4244'])
+        }
+    });
+
+    // Shader Compiler example executable
+    b.addTarget('example', 'plain-exe', (t) => {
+        t.setDir('src/compiler_example');
+        t.addSources(["example.cpp", "math.hpp"]);
+        t.addIncludeDirectories(['.']);
+        t.addDependencies(['sokol_app', 'sokol_gfx', 'Shader_Compiler']);
+        if (b.isLinux()) {
+            t.addLinkOptions(['-static']);
+        }
+        if (b.isGcc() || b.isClang()) {
+            t.addCompileOptions([
+                '-Wno-sign-compare',
+                '-Wno-unused-parameter',
+                '-Wno-unused-variable',
+                '-Wno-unused-result',
+                '-Wno-maybe-uninitialized',
+                '-Wno-return-type',
+            ]);
+        }
+        if (b.isMsvc()) {
+            // unreferenced parameter
+            // declaration of 'x' hides previous local declaration
+            // conversion from 'x' to 'y' possible loss of data
+            t.addCompileOptions(['/wd4100', '/wd4456', '/wd4244'])
+        }
+    });
+
+    // libs
+    b.addTarget('Shader_Compiler', 'lib', (t) => {
+        t.setDir('src/ShaderCompiler');
+        t.setIdeFolder('src');
+        t.addSources(shader_compiler_sources);
+        t.addDependencies(['sokol_gfx', 'sokol_shdc']);
+        if (b.isMsvc()) {
+            // unreachable code
+            b.addCompileOptions({ opts: ['/wd4702'], scope: 'private' });
+        }
+        t.addIncludeDirectories(['./']);
+    });
+    b.addTarget('sokol_shdc', 'lib', (t) => {
+        t.setDir('src/shdc');
+        t.setIdeFolder('src');
+        t.addIncludeDirectories(['./']);
+        t.addSources(sokol_shdc_sources);
         t.addDependencies(['fmt', 'getopt', 'pystring', 'glslang', 'SPIRV-Cross', 'tint']);
         if (b.isLinux()) {
             t.addLinkOptions(['-static']);
@@ -66,11 +125,50 @@ export function build(b: Builder): void {
             // unreferenced parameter
             // declaration of 'x' hides previous local declaration
             // conversion from 'x' to 'y' possible loss of data
-            t.addCompileOptions(['/wd4100', '/wd4456', '/wd4244' ])
+            t.addCompileOptions(['/wd4100', '/wd4456', '/wd4244'])
         }
     });
-
     // external libs
+    b.addTarget('sokol_app', 'lib', (t) => {
+        t.setDir('ext/sokol');
+        t.setIdeFolder('ext');
+        t.addSources(sokol_app_sources);
+        if (b.isGcc() || b.isClang()) {
+            t.addCompileOptions([
+                '-Wno-sign-compare',
+                '-Wno-unused-parameter',
+                '-Wno-unused-variable',
+                '-Wno-unused-result',
+                '-Wno-maybe-uninitialized',
+                '-Wno-return-type'
+            ]);
+        }
+        if (b.isMsvc()) {
+            // unreachable code
+            b.addCompileOptions({ opts: ['/wd4702'], scope: 'private' });
+        }
+        t.addIncludeDirectories(['./']);
+    });
+    b.addTarget('sokol_gfx', 'lib', (t) => {
+        t.setDir('ext/sokol');
+        t.setIdeFolder('ext');
+        t.addSources(sokol_gfx_sources);
+        if (b.isGcc() || b.isClang()) {
+            t.addCompileOptions([
+                '-Wno-sign-compare',
+                '-Wno-unused-parameter',
+                '-Wno-unused-variable',
+                '-Wno-unused-result',
+                '-Wno-maybe-uninitialized',
+                '-Wno-return-type'
+            ]);
+        }
+        if (b.isMsvc()) {
+            // unreachable code
+            b.addCompileOptions({ opts: ['/wd4702'], scope: 'private' });
+        }
+        t.addIncludeDirectories(['./']);
+    });
     b.addTarget('getopt', 'lib', (t) => {
         t.setDir('ext/getopt');
         t.setIdeFolder('ext');
@@ -109,15 +207,15 @@ export function build(b: Builder): void {
         ]);
         if (b.isClang()) {
             t.addCompileOptions({
-                opts: [ '-Wno-range-loop-analysis', '-Wno-deprecated-declarations' ],
+                opts: ['-Wno-range-loop-analysis', '-Wno-deprecated-declarations'],
                 scope: 'private',
             });
         }
         if (b.isMsvc()) {
             // conversion from 'int' to 'uint32_t', signed/unsigned mismatch
-            t.addCompileOptions({ opts: [ '/wd4127', '/wd4245' ], scope: 'private' });
+            t.addCompileOptions({ opts: ['/wd4127', '/wd4245'], scope: 'private' });
             // conditional expression is constant
-            t.addCompileOptions({ opts: [ '/wd4127'] , scope: 'public' });
+            t.addCompileOptions({ opts: ['/wd4127'], scope: 'public' });
         }
     });
     b.addTarget('glslang', 'lib', (t) => {
@@ -132,12 +230,12 @@ export function build(b: Builder): void {
             t.addSources(['glslang/OSDependent/Unix/ossource.cpp']);
         }
         t.addIncludeDirectories(['.']);
-        t.addIncludeDirectories({ dirs: ['glslang', '../generated' ], scope: 'private' });
+        t.addIncludeDirectories({ dirs: ['glslang', '../generated'], scope: 'private' });
         t.addCompileDefinitions({ defs: { ENABLE_OPT: '1' }, scope: 'private' });
         if (b.isWindows()) {
             t.addCompileDefinitions({ defs: { GLSLANG_OSINCLUDE_WIN32: '1' }, scope: 'private' });
         } else {
-            t.addCompileDefinitions({ defs: { GLSLANG_OSINCLUDE_UNIX: '1'}, scope: 'private' });
+            t.addCompileDefinitions({ defs: { GLSLANG_OSINCLUDE_UNIX: '1' }, scope: 'private' });
         }
         if (b.isClang() || b.isGcc()) {
             t.addCompileOptions({
@@ -162,7 +260,7 @@ export function build(b: Builder): void {
             // conversion from 'x' to 'y' possible loss of data
             // conditional expression is constant
             t.addCompileOptions({
-                opts: ['/wd4458', '/wd4244', '/wd4389', '/wd4457', '/wd4456', '/wd5054', '/wd4267', '/wd4127' ],
+                opts: ['/wd4458', '/wd4244', '/wd4389', '/wd4457', '/wd4456', '/wd5054', '/wd4267', '/wd4127'],
                 scope: 'private'
             });
         }
@@ -185,7 +283,7 @@ export function build(b: Builder): void {
         }
         if (b.isMsvc()) {
             // 'return': conversion from 'x' to 'y'
-            t.addCompileOptions({ opts: [ '/wd4244' ], scope: 'private' });
+            t.addCompileOptions({ opts: ['/wd4244'], scope: 'private' });
             // switch statement contains default but no case labels
             t.addCompileOptions({ opts: ['/wd4065'], scope: 'public' });
         }
@@ -204,7 +302,7 @@ export function build(b: Builder): void {
             // structure was padded...
             // 'return': conversion from 'x' to 'y'
             t.addCompileOptions({
-                opts: ['/wd4457', '/wd4459', '/wd4244' ],
+                opts: ['/wd4457', '/wd4459', '/wd4244'],
                 scope: 'private'
             });
             // declaration of 'x' hides previous local declaration
@@ -323,6 +421,23 @@ const test_shaders = [
     'sapp/write-storageimage-sapp.glsl',
 ];
 
+const shader_compiler_sources = [
+    "ShaderCompiler.cpp",
+    "ShaderCompiler.hpp"
+]
+
+const sokol_app_sources = [
+    "sokol_app.h",
+    "sokol_log.h",
+    'sokol_glue.h',
+    "../sokol_impl/sokol_app_impl.c"
+]
+
+const sokol_gfx_sources = [
+    "sokol_gfx.h",
+    "../sokol_impl/sokol_gfx_impl.c"
+]
+
 const sokol_shdc_sources = [
     'args.cc',
     'args.h',
@@ -330,7 +445,6 @@ const sokol_shdc_sources = [
     'bytecode.h',
     'input.cc',
     'input.h',
-    'main.cc',
     'reflection.cc',
     'reflection.h',
     'spirv.cc',

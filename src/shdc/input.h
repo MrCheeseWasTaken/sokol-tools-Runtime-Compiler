@@ -28,6 +28,7 @@ struct Input {
     std::map<std::string, ImageSampleTypeTag> image_sample_type_tags;
     std::map<std::string, SamplerTypeTag> sampler_type_tags;
 
+    static Input just_parse(const std::string& shader_code);
     static Input load_and_parse(const std::string& path, const std::string& module_override);
     ErrMsg error(int line_index, const std::string& msg) const;
     ErrMsg warning(int line_index, const std::string& msg) const;

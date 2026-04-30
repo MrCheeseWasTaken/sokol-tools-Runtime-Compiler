@@ -428,12 +428,12 @@ static Bytecode spirv_compile(const Input& inp, const Spirvcross& spirvcross, Sl
     return bytecode;
 }
 
-Bytecode Bytecode::compile(const Args& args, const Input& inp, const Spirvcross& spirvcross, Slang::Enum slang) {
+Bytecode Bytecode::compile(std::string tmpdir, const Input& inp, const Spirvcross& spirvcross, Slang::Enum slang) {
     Bytecode bytecode;
     #if defined(__APPLE__)
     // NOTE: for the iOS simulator case, don't compile bytecode but use source code
     if ((slang == Slang::METAL_MACOS) || (slang == Slang::METAL_IOS)) {
-        bytecode = mtl_compile(args, inp, spirvcross, slang);
+        bytecode = mtl_compile(tmpdir, inp, spirvcross, slang);
     }
     #endif
     #if defined(_WIN32)
@@ -445,6 +445,10 @@ Bytecode Bytecode::compile(const Args& args, const Input& inp, const Spirvcross&
         bytecode = spirv_compile(inp, spirvcross, slang);
     }
     return bytecode;
+}
+
+Bytecode Bytecode::compile(const Args& args, const Input& inp, const Spirvcross& spirvcross, Slang::Enum slang) {
+    return compile(args.tmpdir, inp, spirvcross, slang);
 }
 
 void Bytecode::dump_debug() const {
