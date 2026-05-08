@@ -368,7 +368,7 @@ CompiledShaderPrograms ShaderCompiler::CompileShader(const char *shader_code, sg
 
     // cross-translate SPIRV to shader dialect
     compiled_programs.spirvcross = Spirvcross::translate(inp, spirv, slang);
-    Spirvcross& spirvcross = compiled_programs.spirvcross;
+    Spirvcross &spirvcross = compiled_programs.spirvcross;
     if (spirvcross.error.valid())
     {
         spirvcross.error.print(ErrMsg::GCC);
@@ -376,7 +376,7 @@ CompiledShaderPrograms ShaderCompiler::CompileShader(const char *shader_code, sg
     }
 
     // compile shader-byte code if requested (HLSL / Metal)
-    Bytecode& bytecode = compiled_programs.bytecode;
+    Bytecode &bytecode = compiled_programs.bytecode;
     if (byte_code or Slang::is_spirv(slang))
     {
         compiled_programs.bytecode = Bytecode::compile("TODO: GET TEMP DIR", inp, spirvcross, slang);
@@ -414,8 +414,9 @@ CompiledShaderPrograms ShaderCompiler::CompileShader(const char *shader_code, sg
         sg_shader_desc &desc = shaderProgram.shader_desc;
 
         shaderProgram.name = prog.name;
-        desc.label = (prog.name + "_shader").c_str();
-        
+        desc.label = shaderProgram.name.c_str();
+
+        // modified from sokolc.cc
         for (int stage_index = 0; stage_index < ShaderStage::Num; stage_index++)
         {
             const StageReflection &refl = prog.stages[stage_index];
@@ -462,7 +463,8 @@ CompiledShaderPrograms ShaderCompiler::CompileShader(const char *shader_code, sg
                 }
             }
 
-            shaderFunction->entry = refl.entry_point_by_slang(slang).c_str();
+            shaderProgram.shader_entry_names[stage_index] = refl.entry_point_by_slang(slang);
+            shaderFunction->entry = shaderProgram.shader_entry_names[stage_index].c_str();
         }
         if (Slang::is_msl(slang) && prog.has_cs())
         {
@@ -477,14 +479,19 @@ CompiledShaderPrograms ShaderCompiler::CompileShader(const char *shader_code, sg
                 const StageAttr &attr = prog.vs().inputs[attr_index];
                 if (attr.slot >= 0)
                 {
+                    shaderProgram.vertex_attributes[attr_index].name = attr.name;
+                    shaderProgram.vertex_attributes[attr_index].sem_name = attr.sem_name;
+                    shaderProgram.vertex_attributes[attr_index].slot = attr.slot;
+                    shaderProgram.vertex_attributes[attr_index].format = vertex_format(attr.type_info.type);
+
                     desc.attrs[attr_index].base_type = attr_basetype(attr.type_info.basetype());
                     if (Slang::is_glsl(slang))
                     {
-                        desc.attrs[attr_index].glsl_name = attr.name.c_str();
+                        desc.attrs[attr_index].glsl_name = shaderProgram.vertex_attributes[attr_index].name.c_str();
                     }
                     else if (Slang::is_hlsl(slang))
                     {
-                        desc.attrs[attr_index].hlsl_sem_name = attr.sem_name.c_str();
+                        desc.attrs[attr_index].hlsl_sem_name = shaderProgram.vertex_attributes[attr_index].sem_name.c_str();
                         desc.attrs[attr_index].hlsl_sem_index = attr.sem_index;
                     }
                 }
@@ -527,7 +534,7 @@ CompiledShaderPrograms ShaderCompiler::CompileShader(const char *shader_code, sg
                         // NOT A BUG (to take the type from the first struct item, but the size from the toplevel ub)
                         desc.uniform_blocks[ub_index].glsl_uniforms[0].type = flattened_uniform_type(ub->struct_info.struct_items[0].type);
                         desc.uniform_blocks[ub_index].glsl_uniforms[0].array_count = roundup(ub->struct_info.size, 16) / 16;
-                        desc.uniform_blocks[ub_index].glsl_uniforms[0].glsl_name = ub->name.c_str();
+                        desc.uniform_blocks[ub_index].glsl_uniforms[0].glsl_name = shaderProgram.uniforms.back().name.c_str();
                     }
                     else
                     {
@@ -535,9 +542,10 @@ CompiledShaderPrograms ShaderCompiler::CompileShader(const char *shader_code, sg
                         {
                             const Type &u = ub->struct_info.struct_items[u_index];
                             const std::string un = fmt::format("{}.glsl_uniforms[{}]", ubn, u_index);
+                            shaderProgram.uniforms.back().inst_name = ub->inst_name + "." + u.name;
                             desc.uniform_blocks[ub_index].glsl_uniforms[u_index].type = uniform_type(u.type);
                             desc.uniform_blocks[ub_index].glsl_uniforms[u_index].array_count = u.array_count;
-                            desc.uniform_blocks[ub_index].glsl_uniforms[u_index].glsl_name = (ub->inst_name + "." + u.name).c_str();
+                            desc.uniform_blocks[ub_index].glsl_uniforms[u_index].glsl_name = shaderProgram.uniforms.back().inst_name.c_str();
                         }
                     }
                 }
@@ -667,23 +675,14 @@ CompiledShaderPrograms ShaderCompiler::CompileShader(const char *shader_code, sg
             if (tex_smp)
             {
                 const std::string tsn = fmt::format("desc.texture_sampler_pairs[{}]", tex_smp_index);
+                shaderProgram.tex_smp_names[tex_smp_index] = tex_smp->name;
                 desc.texture_sampler_pairs[tex_smp_index].stage = shader_stage(tex_smp->stage);
                 desc.texture_sampler_pairs[tex_smp_index].view_slot = prog.bindings.find_texture_by_name(tex_smp->texture_name)->sokol_slot;
                 desc.texture_sampler_pairs[tex_smp_index].sampler_slot = prog.bindings.find_sampler_by_name(tex_smp->sampler_name)->sokol_slot;
                 if (Slang::is_glsl(slang))
                 {
-                    desc.texture_sampler_pairs[tex_smp_index].glsl_name = tex_smp->name.c_str();
+                    desc.texture_sampler_pairs[tex_smp_index].glsl_name = shaderProgram.tex_smp_names[tex_smp_index].c_str();
                 }
-            }
-        }
-
-        for (const StageAttr &attr : prog.vs().inputs)
-        {
-            if (attr.slot >= 0)
-            {
-                shaderProgram.vertex_attributes.push_back({});
-                shaderProgram.vertex_attributes.back().first = attr.slot;
-                shaderProgram.vertex_attributes.back().second = vertex_format(attr.type_info.type);
             }
         }
     }

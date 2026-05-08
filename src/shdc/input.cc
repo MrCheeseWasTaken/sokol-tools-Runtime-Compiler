@@ -643,6 +643,8 @@ static bool load_and_preprocess(const std::string& path, const std::vector<std::
 Input Input::just_parse(const std::string& shader_code)
 {
     Input inp = {};
+    inp.filenames.push_back("Runtime Shader");
+
     int line_index = 0;
     std::vector<std::string> lines;
     pystring::splitlines(shader_code, lines);

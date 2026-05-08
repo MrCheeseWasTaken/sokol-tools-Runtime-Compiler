@@ -1,6 +1,9 @@
 # About this fork
 
-This is an attempt to create a runtime compiler for sokol. I do don't recommend using it as production code.
+This is an attempt to create a runtime compiler for sokol.
+It takes in a string that is the same contents as a normal sokol shader and outputs
+a ```ShaderProgram``` which contains the filled in ```sg_shader_desc``` needed for
+the shader as well as uniforms and vertex attributes data.
 
 changes made to sokol-shdc can be viewed here [ShaderCompiler_Changes](ShaderCompiler_Changes.md)
 

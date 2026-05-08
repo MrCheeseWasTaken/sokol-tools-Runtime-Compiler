@@ -95,7 +95,8 @@ void init()
     pip_desc.layout.buffers[0].stride = sizeof(Vertex);
     for (int i = 0; i < program.vertex_attributes.size(); i++)
     {
-        pip_desc.layout.attrs[program.vertex_attributes[i].first].format = program.vertex_attributes[i].second;
+        if (program.vertex_attributes[i].format != sg_vertex_format::SG_VERTEXFORMAT_INVALID)
+            pip_desc.layout.attrs[program.vertex_attributes[i].slot].format = program.vertex_attributes[i].format;
     }
     for (int i = 0; i < program.uniforms.size(); i++)
     {
@@ -187,13 +188,13 @@ void frame()
 
         // model: rotate
         model = mat4_rotate_y(time);
-        model = mat4_mul(model, mat4_rotate_x(time*1.1));
+        model = mat4_mul(model, mat4_rotate_x(time * 1.1));
 
         // view: move camera back
         view = mat4_translate(0.0f, 0.0f, -5.0f);
 
         // projection
-        proj = mat4_perspective(deg_to_rad(60.0f), 640.f/480.f, 0.1f, 100.0f);
+        proj = mat4_perspective(deg_to_rad(60.0f), 640.f / 480.f, 0.1f, 100.0f);
 
         mvp = mat4_mul(proj, mat4_mul(view, model));
     }
