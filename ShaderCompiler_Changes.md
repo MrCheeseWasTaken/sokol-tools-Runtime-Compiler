@@ -13,7 +13,7 @@
 - moved ```main.cc``` to [shdc_exe/main.cc](src/shdc_exe/main.cc)
 
 - sokol-shdc.exe links shdc
-    - removed ```main.cc``` from sources
+    - removed ```main.cc``` from sources of shdc (now) library
 
 - [shdc/input.h](src/shdc/input.h) | [shdc/input.cc](src/shdc/input.cc)
     - added ```cpp static Input just_parse(const std::string& shader_code);```

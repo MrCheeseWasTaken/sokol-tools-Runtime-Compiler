@@ -5,9 +5,11 @@ It takes in a string that is the same contents as a normal sokol shader and outp
 a ```ShaderProgram``` which contains the filled in ```sg_shader_desc``` needed for
 the shader as well as uniforms and vertex attributes data.
 
-changes made to sokol-shdc can be viewed here [ShaderCompiler_Changes](ShaderCompiler_Changes.md)
+changes made to sokol-shdc as well as other stuff can be viewed here [ShaderCompiler_Changes](ShaderCompiler_Changes.md)
 
-You can see an example at [example.cpp](src/example/example.cpp)
+You can see an example at [example.cpp](src/compiler_example/example.cpp)
+
+![image](docs/images/compile_render.jpg)
 
 # sokol-tools
 
