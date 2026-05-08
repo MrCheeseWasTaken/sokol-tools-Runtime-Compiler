@@ -51,6 +51,7 @@ namespace shdc
         Bytecode bytecode;
 
         std::vector<ShaderProgram> programs;
+        std::string error = "";
     };
 
     struct ShaderCompiler

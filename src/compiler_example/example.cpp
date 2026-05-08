@@ -1,3 +1,4 @@
+#include <iostream>
 #include <string>
 
 #include <sokol_app.h>
@@ -31,7 +32,7 @@ layout(binding=0) uniform vs_params {
     mat4 mvp;
 };
 
-in vec3 v_vertexPosition;
+in vec3 v_vertexPosit ion;
 
 out vec4 f_color;
 
@@ -78,8 +79,9 @@ void init()
 
     shdc::ShaderCompiler::Finalize();
 
-    if (programs.programs.empty())
+    if (!programs.error.empty())
     {
+        std::cout << programs.error << "\n";
         return;
     }
 

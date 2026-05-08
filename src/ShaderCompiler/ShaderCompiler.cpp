@@ -340,8 +340,9 @@ CompiledShaderPrograms ShaderCompiler::CompileShader(const char *shader_code, sg
     Input inp = Input::just_parse(shader_code);
     if (inp.out_error.valid())
     {
-        inp.out_error.print(ErrMsg::GCC);
-        return {};
+        // inp.out_error.print(ErrMsg::GCC);
+        compiled_programs.error = inp.out_error.as_string(ErrMsg::GCC);
+        return compiled_programs;
     }
 
     // compile source snippets to SPIRV blobs (multiple compilations is necessary
@@ -358,11 +359,12 @@ CompiledShaderPrograms ShaderCompiler::CompileShader(const char *shader_code, sg
             {
                 has_errors = true;
             }
-            err.print(ErrMsg::GCC);
+            // err.print(ErrMsg::GCC);
+            compiled_programs.error = err.as_string(ErrMsg::GCC);
         }
         if (has_errors)
         {
-            return {};
+            return compiled_programs;
         }
     }
 
@@ -372,7 +374,8 @@ CompiledShaderPrograms ShaderCompiler::CompileShader(const char *shader_code, sg
     if (spirvcross.error.valid())
     {
         spirvcross.error.print(ErrMsg::GCC);
-        return {};
+        compiled_programs.error = spirvcross.error.as_string(ErrMsg::GCC);
+        return compiled_programs;
     }
 
     // compile shader-byte code if requested (HLSL / Metal)
@@ -389,11 +392,12 @@ CompiledShaderPrograms ShaderCompiler::CompileShader(const char *shader_code, sg
                 {
                     has_errors = true;
                 }
-                err.print(ErrMsg::GCC);
+                // err.print(ErrMsg::GCC);
+                compiled_programs.error = err.as_string(ErrMsg::GCC);
             }
             if (has_errors)
             {
-                return {};
+                return compiled_programs;
             }
         }
     }
@@ -403,7 +407,8 @@ CompiledShaderPrograms ShaderCompiler::CompileShader(const char *shader_code, sg
     if (reflection.error.valid())
     {
         reflection.error.print(ErrMsg::GCC);
-        return {};
+        compiled_programs.error = reflection.error.as_string(ErrMsg::GCC);
+        return compiled_programs;
     }
 
     // Populating compiled_programs
